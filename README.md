@@ -1,5 +1,5 @@
 # my_tapd_frontend
-
+自制tapd平台，使用vue cli生成框架，vue+element制作而成
 ## Project setup
 ```
 npm install
