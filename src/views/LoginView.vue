@@ -8,13 +8,27 @@
 
 <script>
 
+import {report} from "@/api/api";
+
 export default {
   name: "LoginView",
   data() {
     return {};
   },
-  methods: {},
-  components: {}
+  methods: {
+    isLogin() {
+      report().then(res => {
+        if (res.code === 0) {
+          this.$message.success("登录成功");
+          this.$router.push("/home");
+        }
+      });
+    }
+  },
+  components: {},
+  mounted() {
+    this.isLogin();
+  }
 };
 </script>
 
