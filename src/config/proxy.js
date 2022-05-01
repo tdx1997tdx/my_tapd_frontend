@@ -5,6 +5,6 @@ export default {
     },
     production: {
         // 正式环境接口地址
-        host: "http://localhost:5000/api/"
+        host: "http://139.198.36.243/api/"
     }
 };
