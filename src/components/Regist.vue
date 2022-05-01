@@ -21,6 +21,8 @@
 </template>
 
 <script>
+import {regist} from "@/api/api";
+
 export default {
   name: "LoginView",
   data() {
@@ -55,10 +57,23 @@ export default {
     submitForm: function (formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          alert("submit!");
+          regist({
+            username: this.formData.username,
+            password: this.formData.password
+          }).then(res => {
+            if (res.code === 0) {
+              localStorage.setItem("username", this.formData.username);
+              this.$message.success("注册成功");
+              this.$router.push("/login/loginItem");
+            } else {
+              this.$message.warning(res.msg);
+            }
+          });
         } else {
           return false;
         }
+      }).catch(error => {
+        this.$message.warning("服务器错误" + error);
       });
     },
     resetForm: function (formName) {

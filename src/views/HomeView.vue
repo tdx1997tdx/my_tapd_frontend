@@ -43,6 +43,7 @@
 
 import {defineComponent} from "vue";
 import {Platform, List} from "@element-plus/icons-vue";
+import {report} from "@/api/api";
 
 export default defineComponent({
   name: "HomeView",
@@ -56,9 +57,31 @@ export default defineComponent({
     toggleClick() {
       this.isCollapse = !this.isCollapse;
       this.asideWidth = this.isCollapse ? "65px" : "150px";
+    },
+    heartBeat() {
+      report().then(res => {
+        if (res.code === 10002) {
+          this.$message.warning(res.msg);
+          this.$router.push("/login/loginItem");
+        }
+      }).catch(error => {
+        this.$message.warning("服务器错误" + error);
+        this.$router.push("/login/loginItem");
+      });
     }
   },
-  components: {Platform, List}
+  components: {Platform, List},
+  mounted() {
+    this.heartBeat();
+    if (this.timer) {
+      clearInterval(this.timer);
+    } else {
+      this.timer = setInterval(this.heartBeat, 10000);
+    }
+  },
+  unmounted() {
+    clearInterval(this.timer);
+  }
 });
 </script>
 
