@@ -1,21 +1,18 @@
 <template>
   <el-container class="home-container">
     <el-aside :width="asideWidth" class="aside">
-      <div class="logo">飞雪</div>
-      <el-menu router="true" :collapse="isCollapse" background-color="#545c64" text-color="#fff"
-               active-text-color="#ffd04b">
+      <div class="logo"></div>
+      <el-menu :collapse="isCollapse" active-text-color="#ffd04b"
+               background-color="#545c64"
+               class="el-menu-vertical-demo"
+               text-color="#fff" v-model="activeMenu.path" :default-active="activeMenu.path">
         <div class="toggle-button" @click="toggleClick">|||</div>
-        <el-menu-item index="1">
+        <el-menu-item :index="menu.path" :value="menu.title" v-for="menu in menuList" :key="menu.path"
+                      @click="changeMenu(menu)">
           <el-icon style="margin-right: 10px">
-            <platform/>
+            <component :is="menu.icon"></component>
           </el-icon>
-          <span>项目管理</span>
-        </el-menu-item>
-        <el-menu-item index="2">
-          <el-icon style="margin-right: 10px">
-            <list/>
-          </el-icon>
-          <span>文本管理</span>
+          <span>{{ menu.title }}</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -23,69 +20,128 @@
     <el-container>
       <el-header>
         <el-row class="header">
-          <el-col :span="20">
-            <el-menu router="true" mode="horizontal">
-              <el-menu-item index="1">
-                <span>项目管理</span>
-              </el-menu-item>
-              <el-menu-item index="2">
-                <span>文本管理</span>
-              </el-menu-item>
-            </el-menu>
+          <el-col :span="21">
+            <span class="title">飞雪随笔</span>
           </el-col>
-          <el-col :span="2">
-            <div class="myLogo"></div>
-          </el-col>
-          <el-col :span="2">
-            <el-menu class="el-menu-demo" mode="horizontal">
-              <el-submenu index="2">
-                <template #title>{{ username }}</template>
-                <el-menu-item index="2-1">个人主页</el-menu-item>
-                <el-menu-item @click="logout">登出</el-menu-item>
-              </el-submenu>
-            </el-menu>
+          <el-col :span="3">
+            <div style="text-align: center;margin:auto;">
+              <el-dropdown>
+                <div class="el-dropdown-link">
+                  <div class="myLogo"></div>
+                  {{ user.nickname }}
+                </div>
+                <template #dropdown>
+                  <el-dropdown-menu>
+
+                    <el-dropdown-item @click="updateUserVisible = true">
+                      <el-icon>
+                        <avatar/>
+                      </el-icon>
+                      个人信息
+                    </el-dropdown-item>
+                    <el-dropdown-item @click="logout">
+                      <el-icon>
+                        <remove/>
+                      </el-icon>
+                      登出
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </div>
           </el-col>
         </el-row>
       </el-header>
 
       <el-main>
-        <el-breadcrumb separator-class="el-icon-arrow-right">
-          <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-          <el-breadcrumb-item>活动管理</el-breadcrumb-item>
-          <el-breadcrumb-item>活动列表</el-breadcrumb-item>
-          <el-breadcrumb-item>活动详情</el-breadcrumb-item>
-        </el-breadcrumb>
         <el-scrollbar>
-          <el-table :data="tableData">
-            <el-table-column prop="date" label="Date" width="140"/>
-            <el-table-column prop="name" label="Name" width="120"/>
-            <el-table-column prop="address" label="Address"/>
-          </el-table>
+          <router-view></router-view>
         </el-scrollbar>
       </el-main>
     </el-container>
   </el-container>
+
+  <el-dialog v-model="updateUserVisible" title="修改个人信息">
+    <el-form :model="updateUserForm" label-width="80px" label-position="left">
+      <el-form-item label="用户名：">
+        {{ updateUserForm.username }}
+      </el-form-item>
+      <el-form-item label="昵称:">
+        <el-input v-model="updateUserForm.nickname"/>
+      </el-form-item>
+      <el-form-item label="简介：">
+        <el-input
+            type="textarea"
+            :rows="5"
+            placeholder="请输入个人简介"
+            v-model="updateUserForm.introduction">
+        </el-input>
+      </el-form-item>
+      <el-form-item label="生日：">
+        <el-date-picker
+            v-model="updateUserForm.birthday"
+            type="date"
+            placeholder="请选择生日"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            :default-time="updateUserForm.birthday"
+        />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="updateUserVisible = false">取消</el-button>
+        <el-button type="primary" @click="updateUserMsg">确认</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>
 
 <script>
 
 import {defineComponent} from "vue";
-import {Platform, List} from "@element-plus/icons-vue";
-import {report} from "@/api/api";
+import {Platform, List, Avatar, Remove} from "@element-plus/icons-vue";
+import {report, getUserMsg, updateUserMsg} from "@/api/api";
+import rounte from "@/router/routes";
 
 export default defineComponent({
   name: "HomeView",
   data() {
     return {
+      updateUserForm: {},
+      updateUserVisible: false,
       isCollapse: false,
       asideWidth: "150px",
-      username: ""
+      user: {},
+      activeMenu: {},//当前激活的菜单
+      menuList: []
     };
   },
   methods: {
     toggleClick() {
       this.isCollapse = !this.isCollapse;
       this.asideWidth = this.isCollapse ? "65px" : "150px";
+    },
+    active() {
+      let tmp = "";
+      let res = "";
+      if (!this.$route.path) {
+        return tmp;
+      }
+      const pathArr = this.$route.path.split("/");
+      if (pathArr.length > 1) {
+        tmp = pathArr[pathArr.length - 1];
+      }
+      for (let i of this.menuList) {
+        if (i.path === tmp) {
+          res = i;
+        }
+      }
+      return res;
+    },
+    changeMenu(menu) {
+      this.$router.push(menu.path);
+      this.activeMenu = menu;
     },
     heartBeat() {
       report().then(res => {
@@ -102,9 +158,22 @@ export default defineComponent({
       localStorage.removeItem("token");
       this.$router.push("/login");
       this.$message.warning("登出成功");
+    },
+    updateUserMsg() {
+      this.updateUserVisible = false;
+      updateUserMsg(this.updateUserForm).then(res => {
+        if (res.code === 0) {
+          this.$message.warning("更改成功");
+          location.reload();
+        } else {
+          this.$message.warning("更改失败");
+        }
+      }).catch(error => {
+        this.$message.warning("服务器错误" + error);
+      });
     }
   },
-  components: {Platform, List},
+  components: {Platform, List, Avatar, Remove},
   mounted() {
     this.heartBeat();
     if (this.timer) {
@@ -112,7 +181,26 @@ export default defineComponent({
     } else {
       this.timer = setInterval(this.heartBeat, 10000);
     }
-    this.username = localStorage.getItem("loginName");
+    getUserMsg({
+      "username": localStorage.getItem("loginName")
+    }).then(res => {
+      if (res.code === 0) {
+        this.user = res.data;
+        this.updateUserForm = JSON.parse(JSON.stringify(this.user));
+      } else {
+        this.$message.warning("获取用户信息失败");
+      }
+    }).catch(error => {
+      this.$message.warning("获取用户信息失败" + error);
+    });
+
+    this.menuList = [];
+    for (let i of rounte) {
+      if (i.name === "home") {
+        this.menuList = i.children;
+      }
+    }
+    this.activeMenu = this.active();
   },
   unmounted() {
     clearInterval(this.timer);
@@ -122,12 +210,20 @@ export default defineComponent({
 
 <style scoped>
 .logo {
-  margin: 0 auto;
-  text-align: center;
-  line-height: 80px;
-  height: 100px;
-  font-size: 20px;
-  background-color: #545c64;
+  height: 200px;
+  background-image: url('../assets/girl.jpeg');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.title {
+  position: absolute;
+  transform: translate(-50% -50%);
+  letter-spacing: 5px;
+  color: blue;
+  margin-left: 20px;
+  margin-top: 15px;
+  font-size: 200%;
 }
 
 .aside {
@@ -140,11 +236,12 @@ export default defineComponent({
 
 
 .myLogo {
-  width: 100%;
-  height: 100%;
+  width: 50px;
+  height: 50px;
+  margin: auto;
   background-color: #fff;
   border-radius: 50px;
-  background-image: url('../assets/logo.png');
+  background-image: url('../assets/touxiang.jpg');
   background-repeat: no-repeat;
   background-size: 100% 100%;
 }
