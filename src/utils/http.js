@@ -47,7 +47,6 @@ const http = ({method, url, data, config, headers = {"Content-Type": "applicatio
     );
     method = method.toLowerCase();
     if (method === "get" || method === "delete") {
-        console.log(data)
         return instance({url, method, params: data, ...config});
     }
     return instance({url, method, data, ...config});

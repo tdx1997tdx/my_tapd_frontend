@@ -15,16 +15,6 @@
           end-placeholder="结束时间"
       />
     </el-form-item>
-    <el-form-item label="是否公开">
-      <el-select v-model="searchParams.isPublic" placeholder="是否公开">
-        <el-option
-            v-for="item in options"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-        />
-      </el-select>
-    </el-form-item>
     <el-form-item>
       <el-button @click="clean">清空</el-button>
     </el-form-item>
@@ -37,21 +27,10 @@
     <el-table-column prop="content" label="内容" show-overflow-tooltip="true"/>
     <el-table-column prop="create_time" label="发布时间" width="170px" align="center"/>
     <el-table-column prop="update_time" label="更新时间" width="170px" align="center"/>
-    <el-table-column prop="is_public" label="是否公开" width="80px" align="center"/>
-    <el-table-column label="操作" width="240px" align="center">
+    <el-table-column prop="author_name" label="作者" width="170px" align="center"/>
+    <el-table-column label="查看" width="100px" align="center">
       <template #default="scope">
         <el-button size="small" @click="handleView(scope.$index, scope.row)" type="info">查看</el-button>
-        <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-        <el-popover v-model:visible="scope.row.delete_visible" placement="top" :width="160">
-          <p>是否要删除文章?</p>
-          <div style="text-align: right; margin: 0">
-            <el-button size="small" type="text" @click="scope.row.delete_visible=false">取消</el-button>
-            <el-button size="small" type="primary" @click="handleDeleteConfirm(scope.$index, scope.row)">确认</el-button>
-          </div>
-          <template #reference>
-            <el-button size="small" type="danger" @click="scope.row.delete_visible=true">删除</el-button>
-          </template>
-        </el-popover>
       </template>
     </el-table-column>
   </el-table>
@@ -67,7 +46,7 @@
   />
 </template>
 <script>
-import {getArticle, deleteArticle} from "@/api/api";
+import {getArticle} from "@/api/api";
 
 export default {
   data() {
@@ -120,27 +99,9 @@ export default {
     };
   },
   methods: {
-    handleEdit(index, row) {
-      this.$router.push({path: "updateArticle", query: {id: row.id}});
-    },
     handleView(index, row) {
       let routeUrl = this.$router.resolve({path: "/seeNote", query: {id: row.id}});
       window.open(routeUrl.href, "_blank");
-    },
-    handleDeleteConfirm(index, row) {
-      deleteArticle({
-        id: row.id,
-        is_delete: 1
-      }).then(res => {
-        if (res.code === 0) {
-          this.$message.warning("删除成功");
-          this.search();
-        } else {
-          this.$message.warning("删除失败" + res.msg);
-        }
-      }).catch(error => {
-        this.$message.warning("服务器错误" + error);
-      });
     },
     handleSizeChange(val) {
       this.pageParams.pageSize = val;
@@ -154,7 +115,6 @@ export default {
       let data = {
         "currentPage": this.pageParams.currentPage,
         "pageSize": this.pageParams.pageSize,
-        "user_id": localStorage.getItem("userId"),
         "is_delete": "0"
       };
       if (this.searchParams.title !== "") {
@@ -176,8 +136,7 @@ export default {
               content: i.content,
               create_time: i.create_time,
               update_time: i.update_time,
-              is_public: i.is_public === 0 ? "否" : "是",
-              delete_visible: false
+              author_name: i.author_name
             });
           }
           this.pageParams.totalPage = res.data.total;
@@ -198,7 +157,6 @@ export default {
       getArticle({
         "currentPage": this.pageParams.currentPage,
         "pageSize": this.pageParams.pageSize,
-        "user_id": localStorage.getItem("userId"),
         "is_delete": "0"
       }).then(res => {
         if (res.code === 0) {
@@ -210,8 +168,7 @@ export default {
               content: i.content,
               create_time: i.create_time,
               update_time: i.update_time,
-              is_public: i.is_public === 0 ? "否" : "是",
-              delete_visible: false
+              author_name: i.author_name
             });
           }
           this.pageParams.totalPage = res.data.total;

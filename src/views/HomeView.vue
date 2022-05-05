@@ -8,7 +8,7 @@
                text-color="#fff" v-model="activeMenu.path" :default-active="activeMenu.path">
         <div class="toggle-button" @click="toggleClick">|||</div>
         <el-menu-item :index="menu.path" :value="menu.title" v-for="menu in menuList" :key="menu.path"
-                      @click="changeMenu(menu)">
+                      @click="changeMenu(menu)" v-show="!menu.hidden">
           <el-icon style="margin-right: 10px">
             <component :is="menu.icon"></component>
           </el-icon>
@@ -99,12 +99,11 @@
 
 <script>
 
-import {defineComponent} from "vue";
 import {Platform, List, Avatar, Remove} from "@element-plus/icons-vue";
 import {report, getUserMsg, updateUserMsg} from "@/api/api";
 import rounte from "@/router/routes";
 
-export default defineComponent({
+export default {
   name: "HomeView",
   data() {
     return {
@@ -181,19 +180,6 @@ export default defineComponent({
     } else {
       this.timer = setInterval(this.heartBeat, 10000);
     }
-    getUserMsg({
-      "username": localStorage.getItem("loginName")
-    }).then(res => {
-      if (res.code === 0) {
-        this.user = res.data;
-        this.updateUserForm = JSON.parse(JSON.stringify(this.user));
-      } else {
-        this.$message.warning("获取用户信息失败");
-      }
-    }).catch(error => {
-      this.$message.warning("获取用户信息失败" + error);
-    });
-
     this.menuList = [];
     for (let i of rounte) {
       if (i.name === "home") {
@@ -202,10 +188,25 @@ export default defineComponent({
     }
     this.activeMenu = this.active();
   },
+  created() {
+    getUserMsg({
+      "username": localStorage.getItem("loginName")
+    }).then(res => {
+      if (res.code === 0) {
+        this.user = res.data;
+        localStorage.setItem("userId", this.user.id);
+        this.updateUserForm = JSON.parse(JSON.stringify(this.user));
+      } else {
+        this.$message.warning("获取用户信息失败");
+      }
+    }).catch(error => {
+      this.$message.warning("获取用户信息失败" + error);
+    });
+  },
   unmounted() {
     clearInterval(this.timer);
   }
-});
+};
 </script>
 
 <style scoped>

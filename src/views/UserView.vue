@@ -1,9 +1,9 @@
 <template>
   <el-form :inline="true" :model="searchParams" class="demo-form-inline">
-    <el-form-item label="标题">
-      <el-input v-model="searchParams.title" placeholder="标题查询"/>
+    <el-form-item label="用户名">
+      <el-input v-model="searchParams.title" placeholder="用户名查询"/>
     </el-form-item>
-    <el-form-item label="发布时间范围查询">
+    <el-form-item label="创建时间范围查询">
       <el-date-picker
           v-model="searchParams.createTimeZone"
           type="datetimerange"
@@ -15,16 +15,6 @@
           end-placeholder="结束时间"
       />
     </el-form-item>
-    <el-form-item label="是否公开">
-      <el-select v-model="searchParams.isPublic" placeholder="是否公开">
-        <el-option
-            v-for="item in options"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-        />
-      </el-select>
-    </el-form-item>
     <el-form-item>
       <el-button @click="clean">清空</el-button>
     </el-form-item>
@@ -33,25 +23,24 @@
     </el-form-item>
   </el-form>
   <el-table :data="tableData" border stripe style="width: 100%">
-    <el-table-column prop="title" label="标题" width="200px" show-overflow-tooltip="true"/>
-    <el-table-column prop="content" label="内容" show-overflow-tooltip="true"/>
-    <el-table-column prop="create_time" label="发布时间" width="170px" align="center"/>
-    <el-table-column prop="update_time" label="更新时间" width="170px" align="center"/>
-    <el-table-column prop="is_public" label="是否公开" width="80px" align="center"/>
-    <el-table-column label="操作" width="240px" align="center">
+    <el-table-column prop="username" label="用户名" width="200px"/>
+    <el-table-column prop="nickname" label="昵称" width="200px"/>
+    <el-table-column prop="introduction" label="简介" show-overflow-tooltip="true"/>
+    <el-table-column prop="create_time" label="创建时间" width="170px" align="center"/>
+    <el-table-column label="操作" width="80px" align="center">
       <template #default="scope">
         <el-button size="small" @click="handleView(scope.$index, scope.row)" type="info">查看</el-button>
-        <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-        <el-popover v-model:visible="scope.row.delete_visible" placement="top" :width="160">
-          <p>是否要删除文章?</p>
-          <div style="text-align: right; margin: 0">
-            <el-button size="small" type="text" @click="scope.row.delete_visible=false">取消</el-button>
-            <el-button size="small" type="primary" @click="handleDeleteConfirm(scope.$index, scope.row)">确认</el-button>
-          </div>
-          <template #reference>
-            <el-button size="small" type="danger" @click="scope.row.delete_visible=true">删除</el-button>
-          </template>
-        </el-popover>
+        <!--        <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>-->
+        <!--        <el-popover v-model:visible="scope.row.delete_visible" placement="top" :width="160">-->
+        <!--          <p>是否要删除文章?</p>-->
+        <!--          <div style="text-align: right; margin: 0">-->
+        <!--            <el-button size="small" type="text" @click="scope.row.delete_visible=false">取消</el-button>-->
+        <!--            <el-button size="small" type="primary" @click="handleDeleteConfirm(scope.$index, scope.row)">确认</el-button>-->
+        <!--          </div>-->
+        <!--          <template #reference>-->
+        <!--            <el-button size="small" type="danger" @click="scope.row.delete_visible=true">删除</el-button>-->
+        <!--          </template>-->
+        <!--        </el-popover>-->
       </template>
     </el-table-column>
   </el-table>
@@ -67,15 +56,15 @@
   />
 </template>
 <script>
-import {getArticle, deleteArticle} from "@/api/api";
+import {getUser} from "@/api/api";
 
 export default {
   data() {
     return {
       searchParams: {
-        title: "",
-        createTimeZone: [],
-        isPublic: ""
+        username: "",
+        nickname: "",
+        createTimeZone: []
       },
       pageParams: {
         currentPage: 1,
@@ -120,28 +109,27 @@ export default {
     };
   },
   methods: {
-    handleEdit(index, row) {
-      this.$router.push({path: "updateArticle", query: {id: row.id}});
-    },
+    // handleEdit(index, row) {
+    //   this.$router.push({path: "updateArticle", query: {id: row.id}});
+    // },
     handleView(index, row) {
-      let routeUrl = this.$router.resolve({path: "/seeNote", query: {id: row.id}});
-      window.open(routeUrl.href, "_blank");
+      console.log(index, row);
     },
-    handleDeleteConfirm(index, row) {
-      deleteArticle({
-        id: row.id,
-        is_delete: 1
-      }).then(res => {
-        if (res.code === 0) {
-          this.$message.warning("删除成功");
-          this.search();
-        } else {
-          this.$message.warning("删除失败" + res.msg);
-        }
-      }).catch(error => {
-        this.$message.warning("服务器错误" + error);
-      });
-    },
+    // handleDeleteConfirm(index, row) {
+    //   deleteArticle({
+    //     id: row.id,
+    //     is_delete: 1
+    //   }).then(res => {
+    //     if (res.code === 0) {
+    //       this.$message.warning("删除成功");
+    //       this.search();
+    //     } else {
+    //       this.$message.warning("删除失败" + res.msg);
+    //     }
+    //   }).catch(error => {
+    //     this.$message.warning("服务器错误" + error);
+    //   });
+    // },
     handleSizeChange(val) {
       this.pageParams.pageSize = val;
       this.search();
@@ -153,31 +141,28 @@ export default {
     search() {
       let data = {
         "currentPage": this.pageParams.currentPage,
-        "pageSize": this.pageParams.pageSize,
-        "user_id": localStorage.getItem("userId"),
-        "is_delete": "0"
+        "pageSize": this.pageParams.pageSize
       };
-      if (this.searchParams.title !== "") {
-        data["title"] = this.searchParams.title;
+      if (this.searchParams.username !== "") {
+        data["username"] = this.searchParams.username;
       }
-      if (this.searchParams.isPublic !== "") {
-        data["isPublic"] = this.searchParams.isPublic;
+      if (this.searchParams.nickname !== "") {
+        data["nickname"] = this.searchParams.nickname;
       }
       if (this.searchParams.createTimeZone !== []) {
         data["createTimeZone"] = this.searchParams.createTimeZone;
       }
-      getArticle(data).then(res => {
+      getUser(data).then(res => {
         if (res.code === 0) {
           this.tableData = [];
           for (let i of res.data.data) {
             this.tableData.push({
               id: i.id,
-              title: i.title,
-              content: i.content,
+              username: i.username,
+              nickname: i.nickname,
+              introduction: i.introduction,
               create_time: i.create_time,
-              update_time: i.update_time,
-              is_public: i.is_public === 0 ? "否" : "是",
-              delete_visible: false
+              update_time: i.update_time
             });
           }
           this.pageParams.totalPage = res.data.total;
@@ -195,23 +180,20 @@ export default {
       this.searchParams.isPublic = "";
     },
     getMyArticle() {
-      getArticle({
+      getUser({
         "currentPage": this.pageParams.currentPage,
-        "pageSize": this.pageParams.pageSize,
-        "user_id": localStorage.getItem("userId"),
-        "is_delete": "0"
+        "pageSize": this.pageParams.pageSize
       }).then(res => {
         if (res.code === 0) {
           this.tableData = [];
           for (let i of res.data.data) {
             this.tableData.push({
               id: i.id,
-              title: i.title,
-              content: i.content,
+              username: i.username,
+              nickname: i.nickname,
+              introduction: i.introduction,
               create_time: i.create_time,
-              update_time: i.update_time,
-              is_public: i.is_public === 0 ? "否" : "是",
-              delete_visible: false
+              update_time: i.update_time
             });
           }
           this.pageParams.totalPage = res.data.total;

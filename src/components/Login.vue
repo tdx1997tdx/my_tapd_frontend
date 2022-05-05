@@ -54,6 +54,7 @@ export default {
               this.$message.success("登录成功");
               localStorage.setItem("token", res.data.token);
               localStorage.setItem("loginName", this.formData.username);
+              localStorage.setItem("userId", res.data.id);
               if (this.formData.isCheck) {
                 localStorage.setItem("password", this.formData.password);
               } else {

@@ -2,12 +2,23 @@ import HomeView from "@/views/HomeView.vue";
 import Login from "@/components/Login.vue";
 import Regist from "@/components/Regist.vue";
 import LoginView from "@/views/LoginView.vue";
+import WriteNoteView from "@/views/WriteNoteView.vue";
+import UpdateNoteView from "@/views/UpdateNoteView.vue";
 import NoteView from "@/views/NoteView.vue";
+import SeeNoteView from "@/views/SeeNoteView.vue";
+import NoteCommunityView from "@/views/NoteCommunityView.vue";
+import RecycleBinView from "@/views/RecycleBinView.vue";
+import UserView from "@/views/UserView.vue";
 
 const routes = [
     {
         path: "/",
         redirect: "/home"
+    },
+    {
+        path: "/seeNote",
+        name: "seeNote",
+        component: SeeNoteView
     },
     {
         path: "/home",
@@ -19,10 +30,10 @@ const routes = [
                 title: "日记社区",
                 icon: "platform",
                 path: "community",
-                component: NoteView
+                component: NoteCommunityView
             },
             {
-                title: "我的日记管理",
+                title: "日记管理",
                 icon: "platform",
                 path: "note",
                 component: NoteView
@@ -31,7 +42,27 @@ const routes = [
                 title: "发表日记",
                 icon: "list",
                 path: "article",
-                component: NoteView
+                component: WriteNoteView
+            },
+            {
+                title: "修改日记",
+                icon: "list",
+                path: "updateArticle",
+                hidden: true,
+                component: UpdateNoteView
+            },
+            {
+                title: "用户管理",
+                icon: "list",
+                path: "user",
+                hidden: true,
+                component: UserView
+            },
+            {
+                title: "回收站",
+                icon: "list",
+                path: "recycleBin",
+                component: RecycleBinView
             }
         ]
     },
