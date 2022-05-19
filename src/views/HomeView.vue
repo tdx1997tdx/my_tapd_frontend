@@ -27,8 +27,8 @@
             <div style="text-align: center;margin:auto;">
               <el-dropdown>
                 <div class="el-dropdown-link">
-                  <div class="myLogo"></div>
-                  {{ user.nickname }}
+                  <img :src="host+user.logo" height="50" width="50">
+                  <div>{{ user.nickname }}</div>
                 </div>
                 <template #dropdown>
                   <el-dropdown-menu>
@@ -61,8 +61,20 @@
     </el-container>
   </el-container>
 
-  <el-dialog v-model="updateUserVisible" title="修改个人信息">
+  <el-dialog v-model="updateUserVisible" title="修改个人信息" @close="cancelDialog">
     <el-form :model="updateUserForm" label-width="80px" label-position="left">
+      <el-form-item label="头像：">
+        <img :src="host+updateUserForm.logo" width="100" height="100">
+        <el-upload
+            class="avatar-uploader"
+            :action="host + 'uploadImage'"
+            :show-file-list="false"
+            :on-error="handleAvatarError"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload">
+          <el-button size="small" type="primary">点击上传</el-button>
+        </el-upload>
+      </el-form-item>
       <el-form-item label="用户名：">
         {{ updateUserForm.username }}
       </el-form-item>
@@ -90,7 +102,7 @@
     </el-form>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="updateUserVisible = false">取消</el-button>
+        <el-button @click="cancelDialog">取消</el-button>
         <el-button type="primary" @click="updateUserMsg">确认</el-button>
       </span>
     </template>
@@ -102,11 +114,14 @@
 import {Platform, List, Avatar, Remove} from "@element-plus/icons-vue";
 import {report, getUserMsg, updateUserMsg} from "@/api/api";
 import rounte from "@/router/routes";
+import proxy from "@/config/proxy";
 
 export default {
   name: "HomeView",
   data() {
     return {
+      host: "",
+      imageFile: "",
       updateUserForm: {},
       updateUserVisible: false,
       isCollapse: false,
@@ -162,13 +177,52 @@ export default {
       this.updateUserVisible = false;
       updateUserMsg(this.updateUserForm).then(res => {
         if (res.code === 0) {
-          this.$message.warning("更改成功");
+          this.$message.success("更改成功");
           location.reload();
         } else {
           this.$message.warning("更改失败");
         }
       }).catch(error => {
         this.$message.warning("服务器错误" + error);
+      });
+    },
+    cancelDialog() {
+      this.updateUserVisible = false;
+      this.getMyUserMsg();
+    },
+    handleAvatarError() {
+      this.$message.warning("上传失败");
+    },
+    handleAvatarSuccess(res, file) {
+      this.imageFile = res.data.path;
+      this.updateUserForm.logo = this.imageFile;
+      this.$message.success("上传成功");
+    },
+    beforeAvatarUpload(file) {
+      const isJPG = file.type === "image/jpeg";
+      const isLt2M = file.size / 1024 / 1024 < 20;
+
+      if (!isJPG) {
+        this.$message.error("上传头像图片只能是 JPG 格式!");
+      }
+      if (!isLt2M) {
+        this.$message.error("上传头像图片大小不能超过 20MB!");
+      }
+      return isJPG && isLt2M;
+    },
+    getMyUserMsg() {
+      getUserMsg({
+        "username": localStorage.getItem("loginName")
+      }).then(res => {
+        if (res.code === 0) {
+          this.user = res.data;
+          localStorage.setItem("userId", this.user.id);
+          this.updateUserForm = JSON.parse(JSON.stringify(this.user));
+        } else {
+          this.$message.warning("获取用户信息失败");
+        }
+      }).catch(error => {
+        this.$message.warning("获取用户信息失败" + error);
       });
     }
   },
@@ -189,19 +243,9 @@ export default {
     this.activeMenu = this.active();
   },
   created() {
-    getUserMsg({
-      "username": localStorage.getItem("loginName")
-    }).then(res => {
-      if (res.code === 0) {
-        this.user = res.data;
-        localStorage.setItem("userId", this.user.id);
-        this.updateUserForm = JSON.parse(JSON.stringify(this.user));
-      } else {
-        this.$message.warning("获取用户信息失败");
-      }
-    }).catch(error => {
-      this.$message.warning("获取用户信息失败" + error);
-    });
+    const env = process.env.NODE_ENV || "development";
+    this.host = proxy[env].host;
+    this.getMyUserMsg();
   },
   unmounted() {
     clearInterval(this.timer);
@@ -233,18 +277,6 @@ export default {
 
 .home-container {
   height: 100%;
-}
-
-
-.myLogo {
-  width: 50px;
-  height: 50px;
-  margin: auto;
-  background-color: #fff;
-  border-radius: 50px;
-  background-image: url('../assets/touxiang.jpg');
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
 }
 
 .home-container .toolbar {
