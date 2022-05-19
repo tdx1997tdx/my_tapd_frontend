@@ -4,12 +4,7 @@
       <el-input v-model="title" placeholder="请输入标题"></el-input>
     </el-form-item>
     <el-form-item>
-      <el-input
-          v-model="content"
-          :rows="20"
-          type="textarea"
-          placeholder="请输入内容"
-      />
+      <md-editor v-model="content"/>
     </el-form-item>
     <el-form-item style="float: right">
       <el-button type="primary" @click="showDialog">更新</el-button>
@@ -32,6 +27,8 @@
 </template>
 <script>
 import {getArticleById, updateArticle} from "@/api/api";
+import MdEditor from "md-editor-v3";
+import "md-editor-v3/lib/style.css";
 
 export default {
   data() {
@@ -43,6 +40,7 @@ export default {
       dialogVisible: false
     };
   },
+  components: {MdEditor},
   methods: {
     showDialog() {
       this.dialogVisible = true;

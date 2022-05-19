@@ -11,7 +11,7 @@
     "@element-plus/icons-vue": "^1.1.4",
     "core-js": "^3.8.3",
     "element-plus": "^1.0.2-beta.28",
-    "element-ui": "^2.4.5",
+    "md-editor-v3": "^2.0.0",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3",
     "vuex": "^4.0.0"
